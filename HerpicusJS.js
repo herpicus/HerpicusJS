@@ -918,7 +918,6 @@ if(typeof Herpicus === 'undefined') {
 			}
 		}
 
-		var i = 0;
 		if($arguments.length > 0) {
 			var $Loaded = [],
 				$Scripts = {},
@@ -955,26 +954,32 @@ if(typeof Herpicus === 'undefined') {
 						}
 
 						Herpicus.Http.Get($opts.Source, function(Response) {
-							$i++
 							if(Response.Status.Code === 200) {
 								try {
 									var fn = new Function(Response.Data);
 									Herpicus.Require.__loaded__[$opts.Source] = fn;
-									$Loaded.push(fn.call(this));
+									$Scripts[n] = fn.call(this);
 
 									if(Herpicus.isFunction($opts.Callback)) {
 										$opts.Callback.call(this);
 									}
 								} catch(e) {
-									$Loaded.push(undefined);
+									$Scripts[n] = undefined;
 									console.log(e);
 								}
 							} else {
-								$Loaded.push(undefined);
+								$Scripts[n] = undefined;
+								console.log($opts.Source + ' not found');
 							}
+
+							$i++;
 
 							if($arguments[0].length === $i && $Callback !== null) {
 								Herpicus.Safe(function() {
+									Herpicus.ForEach($Scripts, function(_, fn) {
+										$Loaded.push(fn);
+									});
+									
 									$Callback.apply(this, $Loaded);
 								});
 							}
