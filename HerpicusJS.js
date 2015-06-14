@@ -919,8 +919,7 @@ if(typeof Herpicus === 'undefined') {
 		}
 
 		if($arguments.length > 0) {
-			var $Loaded = [],
-				$Scripts = {},
+			var $Scripts = {},
 				$Callback = Herpicus.isFunction($arguments[1]) ? $arguments[1] : null;
 
 			if(Herpicus.isArray($arguments[0])) {
@@ -976,10 +975,14 @@ if(typeof Herpicus === 'undefined') {
 
 							if($arguments[0].length === $i && $Callback !== null) {
 								Herpicus.Safe(function() {
-									Herpicus.ForEach($Scripts, function(_, fn) {
-										$Loaded.push(fn);
+									var $Loaded = [];
+									Herpicus.ForEach($arguments[0], function(_, n) {
+										if(Herpicus.Contains($Scripts, n)) {
+											$Loaded.push($Scripts[n]);
+										}
 									});
-									
+									console.log($Scripts, $Loaded)
+
 									$Callback.apply(this, $Loaded);
 								});
 							}
