@@ -72,12 +72,6 @@ if(typeof Herpicus === 'undefined') {
 	Herpicus.isTextNode = function(el) {
 		return el && el.nodeType && el.nodeType === 3;
 	}
-	Herpicus.isWindow = function(a) {
-		if(Herpicus.TypeOf(a) == 'window') {
-			return true;
-		}
-		return false;
-	};
 	Herpicus.isNodeList = function(nodes) {
 		return typeof nodes === 'object' &&
 			/^\[object (HTMLCollection|NodeList|Object)\]$/.test(Object.prototype.toString.call(nodes)) &&
@@ -1298,23 +1292,15 @@ if(typeof Herpicus === 'undefined') {
 												return elements;
 											},
 											InsertBefore: function(newNode) {
-												try {
-													if($Element.$Node.parentNode) {
-														$Element.$Node.parentNode.insertBefore(newNode, $Element.$Node);
-													}
-												} catch(err) {
-													Herpicus.ErrorHandler(err);
+												if($Element.$Node.parentNode) {
+													$Element.$Node.parentNode.insertBefore(newNode, $Element.$Node);
 												}
 
 												return $Element;
 											},
 											InsertAfter: function(newNode) {
-												try {
-													if($Element.$Node.parentNode) {
-														$Element.$Node.parentNode.insertBefore(newNode, $Element.$Node.nextSibling);
-													}
-												} catch(err) {
-													Herpicus.ErrorHandler(err);
+												if($Element.$Node.parentNode) {
+													$Element.$Node.parentNode.insertBefore(newNode, $Element.$Node.nextSibling);
 												}
 
 												return $Element;
@@ -1348,10 +1334,8 @@ if(typeof Herpicus === 'undefined') {
 											},
 											ClearAll: function() {
 												element.innerHTML = "";
-												Class.RemoveAll();
-												for(var i = 0; i < element.attributes.length; i++) {
-													element.removeAttribute(element.attributes[i].name);
-												}
+												$Element.Class.RemoveAll();
+												$Element.Attributes.RemoveAll();
 												return $Element;
 											},
 											Delete: function() {
@@ -1384,7 +1368,6 @@ if(typeof Herpicus === 'undefined') {
 													if(element.tagName.toLowerCase() === 'input') {
 														element.value = s;
 													} else {
-														element.innerHTML = s;
 														element.innerText = s;
 														element.textContent = s;
 													}
@@ -1435,7 +1418,6 @@ if(typeof Herpicus === 'undefined') {
 												return $Element;
 											},
 											MouseOver: function(callback) {},
-											MouseLeave: function(callback) {},
 											MouseEnter: function(callback) {
 												Herpicus.Event.Add('mouseenter', callback, element);
 												return $Element;
