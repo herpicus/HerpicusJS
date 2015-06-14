@@ -2,43 +2,39 @@
 Herpicus Javascript Library
 
 #### Type Functions
-**Herpicus.TypeOf**   
+**Herpicus.TypeOf()**   
 Return a *string* type for any operand
 ```
 Herpicus.TypeOf({}) //object
 Herpicus.TypeOf(document.createElement('div')) //htmldivelement
 ```
-* Herpicus.isObject  
-* Herpicus.isArray  
-* Herpicus.isFunction  
-* Herpicus.isString  
-* Herpicus.isInteger  
-* Herpicus.isBoolean  
-* Herpicus.isDefined  
-* Herpicus.isUndefined  
-* Herpicus.isElement  
-* Herpicus.isTextNode  
-* Herpicus.isNodeList  
-* Herpicus.isIterable  
+* Herpicus.isObject()  
+* Herpicus.isArray()  
+* Herpicus.isFunction()  
+* Herpicus.isString()  
+* Herpicus.isInteger()  
+* Herpicus.isBoolean()  
+* Herpicus.isDefined()  
+* Herpicus.isUndefined()  
+* Herpicus.isElement()  
+* Herpicus.isTextNode()  
+* Herpicus.isNodeList()  
+* Herpicus.isIterable()  
 Returns a *Boolean* if the operand is x 
 
 ----
 
-**Herpicus.Extend**  
+**Herpicus.Extend(Source, Target)**  
 Extends an *object*  
-`Herpicus.Extend(Source, Target)`
 `var obj = Herpicus.Extend(obj, obj2)`
 
-**Herpicus.Merge**  
+**Herpicus.Merge(Object, Object)**  
 Merges two *objects*  
-`Herpicus.Merge(Object, Object)`
-`var obj = Herpicus.Merge({Hello: "World"}, {Top: "Kek"});` 
+`var obj = Herpicus.Merge({Hello: "World"}, {Top: "Kek"});`  
 
-**Herpicus.ForEach**  
-Iterates through an *Array* or *Object*
+**Herpicus.ForEach(arr, callback[index, value])**  
+Iterates through an *Array* or *Object*  
 ```
-Herpicus.ForEach(arr, callback[index, value]);
-
 var arr = ["1", 2, {three: "four"}];
 Herpicus.ForEach(arr, function(index, value) {
   console.log(index, value);
@@ -55,42 +51,42 @@ Herpicus.ForEach(obj, function(key, value) {
 // three anonymous function()
 ```
 
-**Herpicus.Contains**  
-Checks if an *Array*, *Object* or *String* contains  
-`Herpicus.Contains(arr, arg); // returns boolean`  
+**Herpicus.Contains(arr, args)**  
+Checks if an *Array*, *Object* or *String* contains x and returns boolean  
 
-**Herpicus.Insert**  
+**Herpicus.Insert(target, index, value)**  
 Inserts a value into an *Array* starting from a specific index  
-`Herpicus.Insert(target, index, value); // returns new array`  
+```
+var arr = ["Apple", "Banana", "Github", "Herpicus"];
+arr = Herpicus.Insert(arr, 2, "k00l") // arr => ["Apple", "Banana", "k00l", "Github", "Herpicus"]
+```   
 
-**Herpicus.Trim**  
+**Herpicus.Trim(String)**  
 *IE6+ Compatible*  
-Removes whitespaces and unnecessary spaces from a string  
-`Herpicus.Trim(string) //returns trimmed string`  
+Removes whitespaces and unnecessary spaces from a string   
 
-**Herpicus.IndexOf**  
+**Herpicus.IndexOf(arr, arg, index)**  
 *IE6+ Compatible*  
-`Herpicus.IndexOf(arr, arg, index)`  
 
-**Herpicus.LastIndexOf**  
+**Herpicus.LastIndexOf(arr, arg)**  
 *IE6+ Compatible*  
-`Herpicus.LastIndexOf(arr, arg)`  
 
-**Herpicus.Printf**  
+**Herpicus.Printf(String, Arguments)**  
 String Formatter (Python string.Format)  
-`Herpicus.Printf(String, Arguments)`  
 `Herpicus.Printf("Hello {0}", "World") // returns Hello World`  
 
-**Herpicus.Sprintf**  
-String Formatter 
-`Herpicus.Sprintf(String, Arguments)`
+**Herpicus.Sprintf(String, Arguments)**  
+String Formatter  
 `Herpicus.Sprintf("%s, what does the %s say about his power level? It's over %d!!", "Vegeta", "scouter", 9000)`  
+`returns Vegeta, what does the scouter say about his power level? It's over 9000!!`  
 
-**Herpicus.ErrorHandler**  
+**Herpicus.ErrorHandler(Error|String)**  
 **Herpicus.Defer**  
-**Herpicus.Safe**  
-**Herpicus.Queue**  
-**Herpicus.Function**  
+**Herpicus.Safe(Callback)**  
+**Herpicus.Queue(Callback)**  
+Stores and calls all queued Callbacks  
+**Herpicus.Function(Function)**  
+Parses functions  
 
 **Herpicus.JSON**  
 JSON Stringify and Parse  
@@ -125,25 +121,25 @@ Herpicus.Http({
 **Herpicus.Generate.Number**  
 
 **Herpicus.Timers**  
-**Herpicus.ClearTimer**  
-**Herpicus.Interval**  
-**Herpicus.Timeout**  
+**Herpicus.ClearTimer(Timer)**  
+**Herpicus.Interval(Callback, Integer)**  
+**Herpicus.Timeout(Callback, Integer)**  
 
-**Herpicus.Events**
-*Herpicus.Events.Add*  
-*Herpicus.Events.Remove*  
+**Herpicus.Events**  
+*Herpicus.Events.Add(EventName, Callback, Target)*  
+*Herpicus.Events.Remove(EventName, Target)*  
 
-**Herpicus.Require**
-*Herpicus.Require.Config*  
+**Herpicus.Require(Array, Callback)**  
+*Herpicus.Require.Config(Object)*  
 
-**Herpicus.Module**  
+**Herpicus.Module(String, Callback)**  
 
 ---
 
 #### Herpicus.DOM
-**Herpicus.DOM.Create**  
-**Herpicus.DOM.Parse**  
+**Herpicus.DOM.Create(String)**  
+**Herpicus.DOM.Parse(DOMElement)**  
 
 ---
 
-**Herpicus.Selector**
+**Herpicus.Selector(String)**  
