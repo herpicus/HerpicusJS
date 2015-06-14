@@ -1,6 +1,31 @@
 # HerpicusJS
 Herpicus Javascript Library
 
+---
+
+#### Gettings started
+Include this line into your document head  
+`<script src="HerpicusJS.js" type="text/javascript"></script>`  
+To use Modules like RouteHandler is simple  
+```
+Herpicus.Require.Config({
+	Base: "/Public/Javascript" //base being your JS path
+})(['Modules/RouteHandler'], function(RouteHandler) {
+	var r = new RouteHandler(), body = Herpicus.Selector('body');
+	
+	r.Route('/', function() {
+	  body.HTML('Hello World!');
+	});
+	
+	// user navigates to /#!/test/your/welcome/bro
+	r.Route('/test/{$Cool}/{$Story}/{$M8}', function() {
+	  // returns your welcome bro
+	  console.log($Cool, $Story, $M8);
+	});
+});
+```
+---
+
 #### Type Functions
 **Herpicus.TypeOf()**   
 Return a *string* type for any operand
