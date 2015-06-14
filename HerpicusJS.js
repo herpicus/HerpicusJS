@@ -13,8 +13,6 @@ if(typeof Herpicus === 'undefined') {
 			}
 		});
 	}
-	Herpicus.Document = document;
-	Herpicus.Document.Head = Herpicus.Document.Body = {};
 	//
 	// Built-in Methods
 	//
@@ -597,6 +595,101 @@ if(typeof Herpicus === 'undefined') {
 
 		return r;
 	};
+	//
+	// JSON
+	//
+	Herpicus.JSON = (function() {
+		"use strict";
+
+		var $Regex = new Object({
+			Escapable: /[\\\"\u0000-\u001f\u007f-\u009f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,
+			Dangerous: /[\u0000\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g
+		});
+
+		var gap, indent, rep,
+		quote = function(t) {
+			return $Regex.Escapable.lastIndex = 0, $Regex.Escapable.test(t) ?
+				'"' + t.replace($Regex.Escapable, function (t) {
+					var e = {
+						"\b": "\\b",
+						"	": "\\t",
+						"\n": "\\n",
+						"\f": "\\f",
+						"\r": "\\r",
+						'"': '\\"',
+						"\\": "\\\\"
+					}[t];
+					return Herpicus.isString(e) ? e : "\\u" + ("0000" + t.charCodeAt(0).toString(16)).slice(-4);
+				}) + '"' : '"' + t + '"';
+		},
+		str = function(t, e) {
+			var r, n, o, u, f, a = gap, i = e[t];
+			switch(i && Herpicus.isFunction(rep) && (i = rep.call(e, t, i)), typeof i) {
+			case "string":
+				return quote(i);
+			case "number":
+				return isFinite(i) ? String(i) : "null";
+			case "boolean":
+			case "null":
+				return String(i);
+			case "object":
+				if(!i) return "null";
+				if(gap += indent, f = [], "[object Array]" === Object.prototype.toString.apply(i)) {
+					for(u = i.length, r = 0; u > r; r += 1) f[r] = str(r, i) || "null";
+					return o = 0 === f.length ? "[]" : gap ? "[\n" + gap + f.join(",\n" + gap) + "\n" + a + "]" : "[" + f.join(",") + "]", gap = a, o
+				}
+				if(rep && "object" == typeof rep)
+					for(u = rep.length, r = 0; u > r; r += 1) "string" == typeof rep[r] && (n = rep[r], o = str(n, i), o && f.push(quote(n) + (gap ? ": " : ":") + o));
+				else
+					for(n in i) Object.prototype.hasOwnProperty.call(i, n) && (o = str(n, i), o && f.push(quote(n) + (gap ? ": " : ":") + o));
+				return o = 0 === f.length ? "{}" : gap ? "{\n" + gap + f.join(",\n" + gap) + "\n" + a + "}" : "{" + f.join(",") + "}", gap = a, o
+			}
+		};
+
+		var $Methods = {
+			Stringify: window.JSON ? window.JSON.stringify : function(t, e, r) {
+				var n;
+				if(gap = "", indent = "", Herpicus.isInteger(r)) {
+					for(n = 0; r > n; n += 1) {
+						indent += " ";
+					}
+				} else {
+					Herpicus.isString(r) && (indent = r);
+				}
+				if(rep = e, e && !Herpicus.isFunction(e) && ("object" != typeof e || "number" != typeof e.length)) {
+					throw new Error("JSON.stringify");
+				}
+
+				return str("", {"": t});
+			},
+			Parse: window.JSON ? window.JSON.parse : function (text, reviver) {
+				function walk(t, e) {
+					var r, n, o = t[e];
+					if(o && "object" == typeof o)
+						for(r in o) Object.prototype.hasOwnProperty.call(o, r) && (n = walk(o, r), void 0 !== n ? o[r] = n : delete o[r]);
+					return reviver.call(t, e, o)
+				}
+				var j;
+				if(
+					text = String(text),
+					$Regex.Dangerous.lastIndex = 0,
+					$Regex.Dangerous.test(text) &&
+					(text = text.replace($Regex.Dangerous, function (t) {
+						return "\\u" + ("0000" + t.charCodeAt(0).toString(16)).slice(-4)
+					})),
+					/^[\],:{}\s]*$/.test(
+						text.replace(/\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g, "@")
+						.replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, "]")
+						.replace(/(?:^|:|,)(?:\s*\[)+/g, "")
+					)
+				) {
+					return j = eval("(" + text + ")"), Herpicus.isFunction(reviver) ? walk({"": j}, "") : j;
+				}
+				throw new SyntaxError("JSON.parse")
+			}
+		};
+		return $Methods;
+	})();
 	//
 	// Http
 	//
@@ -1493,12 +1586,39 @@ if(typeof Herpicus === 'undefined') {
 		return $Methods;
 	})();
 
-	console.log(
-		Herpicus.DOM.Create('div').HTML("top kek"),
-		Herpicus.DOM.Create('input'),
-		Herpicus.DOM.Create('text'),
-		Herpicus.DOM.Create('comment')
-	);
+	Herpicus.Selector = function(selector) {
+		var elements = [], tmp = [];
+		if(Herpicus.isString(selector)) {
+			elements = document.querySelectorAll ? document.querySelectorAll(selector) : (function() {
+				var style = document.createElement('style'), tmp = [], e;
+				document.documentElement.firstChild.appendChild(style);
+				document._qsa = [];
+
+				style.styleSheet.cssText = selector + '{x-qsa:expression(document._qsa && document._qsa.push(this))}';
+				window.scrollBy(0, 0);
+				style.parentNode.removeChild(style);
+
+				while(document._qsa.length) {
+					e = document._qsa.shift();
+					e.style.removeAttribute('x-qsa');
+					tmp.push(e);
+				}
+				document._qsa = null;
+				return tmp;
+			})();
+		}
+
+		if(elements.length > 0) {
+			Herpicus.ForEach(elements, function(i, element) {
+				var e = Herpicus.DOM.Parse(element);
+				if(e !== null) {
+					tmp.push(e);
+				}
+			});
+		}
+
+		return tmp.length > 0 ? (tmp.length === 1 ? tmp[0] : tmp) : null;
+	}
 
 	var documentReady = Herpicus.Interval(function() {
 		if(document.readyState === "complete") {
