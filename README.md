@@ -129,13 +129,18 @@ Herpicus.Http({
   Callback: Function // Called after request, returns response
 });
 ```
-*Herpicus.Get(URL (String), Callback (Function))*  
-*Herpicus.Post(URL (String), Data (Object), Callback (Function))*    
-*Herpicus.JSON(URL (String), Callback (Function))*  
+*Herpicus.Http.Get(URL, Callback)*  
+*Herpicus.Http.Post(URL, Data (Object), Callback)*    
+*Herpicus.Http.JSON(URL, Callback)*  
 `Returns Callback response as JSON`
 
-**Herpicus.Generate.String**  
-**Herpicus.Generate.Number**  
+**Herpicus.Generate.String(Integer)**  
+**Herpicus.Generate.Number(Length or range[startNumber, endNumber])**  
+```
+Herpicus.Generate.String(10); // Returns random string with 10 characters [a-zA-Z0-9]
+Herpicus.Generate.Number(10); // Returns random number 10 digits long
+Herpicus.Generate.Number(40, 50) // Returns a number inbetween 40 and 50 (45)
+```
 
 **Herpicus.Timers**  
 **Herpicus.ClearTimer(Timer)**  
