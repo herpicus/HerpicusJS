@@ -169,8 +169,73 @@ Herpicus.Events.Remove('load', window);
 ---
 
 #### Herpicus.DOM
-**Herpicus.DOM.Create(String)**  
-**Herpicus.DOM.Parse(DOMElement)**  
+**Herpicus.DOM.Create(TagName)**  
+It will create an element with the supplied TagName and return it as a Herpicus.Element, TextNode, or Comment.   
+To create a document comment, use *comment*  
+Or to create a simple text node, use *text*  
+```
+Herpicus.DOM.Create('comment')
+Herpicus.DOM.Create('text')
+Herpicus.DOM.Create('div')
+```
+**Herpicus.DOM.Parse(DOMNode)**  
+Parses DOM Nodes and Herpicus.Elements  
+Once a Node has been parsed it will return the following methods base on the nodeType:  
+* DOMElement | Herpicus.Element:
+  * $Node => Original Node properties
+  * nodeType => Integer
+  * Class:
+    * List => Returns classes as array
+    * Contains(String|className) => Returns boolean if contains class name
+    * Add(String|className) => Add a class name
+    * Remove(String|className) => Remove a class name
+    * RemoveAll(String|className) => Removes all classes
+  * Scroll:
+    * Top => Scrolls to the top
+    * Bottom => Scrolls to the bottom
+    * Set(Integer|Value) => Sets the distance on where it should scroll to
+  * Attributes:
+    * Add(String|Name, String|Value) => Adds an attribute
+    * Remove(String|Name) => Removes an attribute
+    * RemoveAll() => Removes all attributes
+    * Contains(String|Name) => Checks if attribute exists (Boolean)
+    * Get(String|Name) => Returns an attributes value (String|null)
+    * List => Lists attributes (Array)
+  * Id(String|Id) => Set the element Id
+  * ParentNode => Returns the elements parentNode or null
+  * Elements(Boolean|Recursive) => Returns all nodes in the element
+  * InsertBefore(Node) => Inserts a new node before this node
+  * InsertAfter(Node) => Inserts a new node after this node
+  * Children(Boolean|Parse) => Returns children as DOM or Herpicus.Element in array
+  * Nodes => nodes
+  * Node(Integer|Index) => Returns specific node
+  * isEmpty() => Checks if node is empty (Boolean)
+  * Clear() => Clears the innerHTML
+  * ClearAll() => Clears the innerHTML, all classes and attributes
+  * Delete() => Deletes this node
+  * Style()
+  * CSS()
+  * HTML(Argument) => Returns or sets the HTML; If Argument is True return outerHTML else innerHTML; else Set HTML;
+  * Text(String|Text) => Sets the text/value of element
+  * AppendTo(Node) => Append this to a node
+  * Append(Node) => Append a node to this
+  * MouseOver(Callback)
+  * MouseLeave(Callback)
+  * MouseEnter(Callback)
+  * Hover(Callback)
+  * Click(Callback)
+  * FadeIn(Integer|Time, Callback)
+  * FadeOut(Integer|Time, Callback)
+  * KeyPress(KeyCode, Callback, Boolean|PreventDefault)
+  * Focus()
+  * Show()
+  * Hide()
+  * Toggle()
+  * Visible => if element visible (boolean)
+* Comment or TextNode
+  * $Node
+  * nodeType
+  * Text(String) => Set the text/value of the comment or textNode
 
 ---
 
