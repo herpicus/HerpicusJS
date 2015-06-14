@@ -148,6 +148,16 @@ Herpicus.Http({
 **Herpicus.Events**  
 *Herpicus.Events.Add(EventName, Callback, Target)*  
 *Herpicus.Events.Remove(EventName, Target)*  
+```
+var btn = Herpicus.Selector('button#k00l');
+Herpicus.Events.Add('click', function() {
+  console.log("I HAVE BEEN CLICKED");
+}, btn);
+Herpicus.Events.Add('load', function() {
+  alert('DOM Ready');
+}, window);
+Herpicus.Events.Remove('load', window);
+```
 
 **Herpicus.Require(Array, Callback)**  
 *Herpicus.Require.Config(Object)*  
