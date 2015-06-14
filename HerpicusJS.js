@@ -586,7 +586,7 @@ if(typeof Herpicus === 'undefined') {
 				return r;
 			}
 
-			r.Call = function() {
+			r.Run = function() {
 				return new Function("return " + r.str)();
 			}
 		}
