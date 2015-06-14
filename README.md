@@ -236,7 +236,16 @@ Once a Node has been parsed it will return the following methods base on the nod
   * $Node
   * nodeType
   * Text(String) => Set the text/value of the comment or textNode
+```
+var a = Herpicus.DOM.Create('div');
+var b = Herpicus.DOM.Parse(document.body);
 
+a.Text('Hello World!').Click(function() {
+  alert('CLICK!');
+}).AppendTo(b);
+
+console.log(b.HTML());
+```
 ---
 
 **Herpicus.Selector(String)**  
