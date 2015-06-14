@@ -1,7 +1,7 @@
 if(typeof Herpicus === 'undefined') {
 	var Herpicus = new Object();
 	Herpicus.$AppName = "HerpicusJS";
-	Herpicus.$Version = 3.0;
+	Herpicus.$Version = 3.1;
 	Herpicus.$Ready = false;
 	Herpicus.Ready = function(callback) {
 		var wait = Herpicus.Interval(function() {
@@ -11,8 +11,9 @@ if(typeof Herpicus === 'undefined') {
 					callback.call(this);
 				}
 			}
-		});
+		}, 10);
 	}
+	Herpicus.Document = document;
 	//
 	// Built-in Methods
 	//
@@ -522,24 +523,27 @@ if(typeof Herpicus === 'undefined') {
 		Herpicus.Safe(function() {
 			if(!Herpicus.Queue.Storage) {
 				Herpicus.Queue.Storage = [];
-				Herpicus.Interval(function() {
-					if(Herpicus.$Ready && Herpicus.Queue.Storage.length > 0) {
-						Herpicus.ForEach(Herpicus.Queue.Storage, function(index, f) {
-							if(Herpicus.isFunction(f)) {
-								f.call(this);
-							}
-						});
-
-						Herpicus.Queue.Storage = [];
-					}
-				}, 10);
 			}
 
 			if(Herpicus.isFunction(fn)) {
 				Herpicus.Queue.Storage.push(Herpicus.Safe(fn, false));
 			}
-		})
+		});
+
+		return Herpicus;
 	}
+	Herpicus.Queue.Storage = [];
+	Herpicus.Queue.Run = function() {
+		if(Herpicus.Queue.Storage.length > 0) {
+			Herpicus.ForEach(Herpicus.Queue.Storage, function(index, f) {
+				if(Herpicus.isFunction(f)) {
+					f.call(this);
+				}
+			});
+
+			Herpicus.Queue.Storage = [];
+		}
+	};
 	//
 	// Function Parser
 	//
@@ -988,6 +992,8 @@ if(typeof Herpicus === 'undefined') {
 					});
 				}
 			}
+		}).Ready(function() {
+			Herpicus.Queue.Run();
 		});
 
 		return Herpicus;
@@ -1589,6 +1595,12 @@ if(typeof Herpicus === 'undefined') {
 	Herpicus.Selector = function(selector) {
 		var elements = [], tmp = [];
 		if(Herpicus.isString(selector)) {
+			if(selector === 'head') {
+				return Herpicus.Document.Head ? Herpicus.Document.Head : (Herpicus.Document.Head = Herpicus.DOM.Parse(Herpicus.Document.head ? Herpicus.Document.head : Herpicus.Document.getElementsByTagName('head')[0]), Herpicus.Document.Head);
+			}
+			else if(selector === 'body') {
+				return Herpicus.Document.Body ? Herpicus.Document.Body : (Herpicus.Document.Body = Herpicus.DOM.Parse(Herpicus.Document.body ? Herpicus.Document.body : Herpicus.Document.getElementsByTagName('body')[0]), Herpicus.Document.Body);
+			}
 			elements = document.querySelectorAll ? document.querySelectorAll(selector) : (function() {
 				var style = document.createElement('style'), tmp = [], e;
 				document.documentElement.firstChild.appendChild(style);
@@ -1625,9 +1637,7 @@ if(typeof Herpicus === 'undefined') {
 			documentReady.Stop();
 			documentReady = undefined;
 
-			Herpicus.Document = document;
-			Herpicus.Document.Head = Herpicus.DOM.Parse(Herpicus.Document.head ? Herpicus.Document.head : Herpicus.Document.getElementsByTagName('head')[0]);
-			Herpicus.Document.Body = Herpicus.DOM.Parse(Herpicus.Document.body ? Herpicus.Document.body : Herpicus.Document.getElementsByTagName('body')[0]);
+			Herpicus.Queue.Run();
 
 			Herpicus.$Ready = true;
 		}
