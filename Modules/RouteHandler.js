@@ -84,14 +84,14 @@ return Herpicus.Module('RouteHandler', function() {
 				});
 
 				if(route.join("/") == location.join("/")) {
-					Herpicus.Func(h).Inject(vars).Call();
+					Herpicus.Function(h).Inject(vars).Run();
 				}
 			}
 		});
 	}
 
 	var wait = Herpicus.Interval(function() {
-		if(Herpicus.ReadyState) {
+		if(Herpicus.Ready) {
 			if(window.location.hash == "" || window.location.hash == "#") {
 				window.location.hash = "#!/";
 			}
