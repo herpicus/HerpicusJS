@@ -81,10 +81,30 @@ String Formatter
 `returns Vegeta, what does the scouter say about his power level? It's over 9000!!`  
 
 **Herpicus.ErrorHandler(Error|String)**  
-**Herpicus.Defer**  
 **Herpicus.Safe(Callback)**  
+Safely execute a function  
+```
+Herpicus.Safe(function() {
+  someObject.thatDoesntExist();
+});
+// Calls Herpicus.ErrorHandler;
+// Script continues
+```
+
 **Herpicus.Queue(Callback)**  
-Stores and calls all queued Callbacks  
+Adds function to a queue  
+*Herpicus.Queue.Call()*  
+Runs all functions stored in the queue  
+```
+Herpicus.Queue(function() {
+  console.log("Hello World!");
+});
+
+Herpicus.Ready(function() {
+  Herpicus.Queue.Call();
+});
+```
+
 **Herpicus.Function(Function)**  
 Parses functions  
 
