@@ -93,15 +93,15 @@ Herpicus.Safe(function() {
 
 **Herpicus.Queue(Callback)**  
 Adds function to a queue  
-*Herpicus.Queue.Call()*  
-Runs all functions stored in the queue  
+*Herpicus.Queue.Run()*  
+Runs all functions stored in the queue, then the queue is erased  
 ```
 Herpicus.Queue(function() {
   console.log("Hello World!");
 });
 
 Herpicus.Ready(function() {
-  Herpicus.Queue.Call();
+  Herpicus.Queue.Run();
 });
 ```
 
@@ -129,13 +129,10 @@ Herpicus.Http({
   Callback: Function // Called after request, returns response
 });
 ```
-*Herpicus.Get*  
-`Herpicus.Get(URL (String), Callback (Function))`  
-*Herpicus.Post*  
-`Herpicus.Post(URL (String), Data (Object), Callback (Function))`  
-*Herpicus.JSON*  
-`Herpicus.JSON(URL (String), Callback (Function)) // Response as JSON`  
-*Herpicus.JSONP*  
+*Herpicus.Get(URL (String), Callback (Function))*  
+*Herpicus.Post(URL (String), Data (Object), Callback (Function))*    
+*Herpicus.JSON(URL (String), Callback (Function))*  
+`Returns Callback response as JSON`
 
 **Herpicus.Generate.String**  
 **Herpicus.Generate.Number**  
