@@ -587,7 +587,7 @@ if(typeof Herpicus === 'undefined') {
 			}
 
 			r.Run = function() {
-				return new Function("return " + r.str)();
+				return new Function("return " + r.str)().call(this);
 			}
 		}
 
@@ -907,88 +907,82 @@ if(typeof Herpicus === 'undefined') {
 
 	Herpicus.Require = function() {
 		var $arguments = arguments;
-		Herpicus.Queue(function() {
-			if(!Herpicus.Require.__loaded__) {
-				Herpicus.Require.__loaded__ = {};
+		if(!Herpicus.Require.__loaded__) {
+			Herpicus.Require.__loaded__ = {};
+		}
+
+		if(!Herpicus.Require.__config__) {
+			Herpicus.Require.__config__ = {
+				Base: "/",
+				Paths: {},
 			}
+		}
 
-			if(!Herpicus.Require.__config__) {
-				Herpicus.Require.__config__ = {
-					Base: "/",
-					Paths: {},
-				}
-			}
+		var i = 0;
+		if($arguments.length > 0) {
+			var $Loaded = [],
+				$Scripts = {},
+				$Callback = Herpicus.isFunction($arguments[1]) ? $arguments[1] : null;
 
-			var i = 0;
-			if($arguments.length > 0) {
-				var $Loaded = [],
-					$Scripts = {},
-					$Callback = Herpicus.isFunction($arguments[1]) ? $arguments[1] : null;
+			if(Herpicus.isArray($arguments[0])) {
+				var $i = 0;
+				Herpicus.ForEach($arguments[0], function(_, n) {
+					var $opts = {
+						Source: null,
+						Async: true,
+						Defer: false,
+						Callback: null
+					};
 
-				if(Herpicus.isArray($arguments[0])) {
-					var $i = 0;
-					Herpicus.ForEach($arguments[0], function(_, n) {
-						var $opts = {
-							Source: null,
-							Async: true,
-							Defer: false,
-							Callback: null
-						};
+					if(Herpicus.isString(n)) {
+						if(Herpicus.Contains(Herpicus.Require.__config__.Paths, n)) {
+							$opts.Source = Herpicus.Require.__config__.Paths[n];
+						} else {
+							$opts.Source = n;
+						}
+					}
+					else if(Herpicus.isObject(n)) {
+						$opts = Herpicus.Extend($opts, n);
+					}
 
-						if(Herpicus.isString(n)) {
-							if(Herpicus.Contains(Herpicus.Require.__config__.Paths, n)) {
-								$opts.Source = Herpicus.Require.__config__.Paths[n];
-							} else {
-								$opts.Source = n;
+					if(Herpicus.isString($opts.Source)) {
+						if(!/^https?:\/\/|^\/\//i.test($opts.Source)) {
+							$opts.Source = ($opts.Source.substr(0, Herpicus.Require.__config__.Base.length - 1) != Herpicus.Require.__config__.Base ? Herpicus.Require.__config__.Base : "") + (Herpicus.Require.__config__.Base.substr(0, Herpicus.Require.__config__.Base.length-1) !== "/" ? "/" : "") + $opts.Source;
+
+							if(Herpicus.IndexOf($opts.Source, ".js") === -1) {
+								$opts.Source += ".js";
 							}
 						}
-						else if(Herpicus.isObject(n)) {
-							$opts = Herpicus.Extend($opts, n);
-						}
 
-						if(Herpicus.isString($opts.Source)) {
-							if(!/^https?:\/\/|^\/\//i.test($opts.Source)) {
-								$opts.Source = ($opts.Source.substr(0, Herpicus.Require.__config__.Base.length - 1) != Herpicus.Require.__config__.Base ? Herpicus.Require.__config__.Base : "") + (Herpicus.Require.__config__.Base.substr(0, Herpicus.Require.__config__.Base.length-1) !== "/" ? "/" : "") + $opts.Source;
+						Herpicus.Http.Get($opts.Source, function(Response) {
+							$i++
+							if(Response.Status.Code === 200) {
+								try {
+									var fn = new Function(Response.Data);
+									Herpicus.Require.__loaded__[$opts.Source] = fn;
+									$Loaded.push(fn.call(this));
 
-								if(Herpicus.IndexOf($opts.Source, ".js") === -1) {
-									$opts.Source += ".js";
-								}
-							}
-
-							Herpicus.Http.Get($opts.Source, function(Response) {
-								$i++
-								if(Response.Status.Code === 200) {
-									try {
-										var fn = new Function(Response.Data);
-										Herpicus.Require.__loaded__[$opts.Source] = fn;
-										$Loaded.push(fn.call(this));
-
-										if(Herpicus.isFunction($opts.Callback)) {
-											$opts.Callback.call(this);
-										}
-									} catch(e) {
-										$Loaded.push(undefined);
-										console.log(e);
+									if(Herpicus.isFunction($opts.Callback)) {
+										$opts.Callback.call(this);
 									}
-								} else {
+								} catch(e) {
 									$Loaded.push(undefined);
+									console.log(e);
 								}
+							} else {
+								$Loaded.push(undefined);
+							}
 
-								if($arguments[0].length === $i) {
-									if($Callback !== null) {
-										Herpicus.Safe(function() {
-											$Callback.apply(this, $Loaded);
-										});
-									}
-								}
-							});
-						}
-					});
-				}
+							if($arguments[0].length === $i && $Callback !== null) {
+								Herpicus.Safe(function() {
+									$Callback.apply(this, $Loaded);
+								});
+							}
+						});
+					}
+				});
 			}
-		}).Ready(function() {
-			Herpicus.Queue.Run();
-		});
+		}
 
 		return Herpicus;
 	};
