@@ -868,6 +868,45 @@ if(typeof Herpicus === 'undefined') {
 			}
 		}
 	};
+	Herpicus.Time = function() {
+		return (new Date()).getTime();
+	}
+	Herpicus.UnixTime = function() {
+		return Math.floor(Herpicus.Time() / 1000);
+	}
+	Herpicus.Date = (function() {
+		$Date = {
+			Months: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+			Month: function(i) {
+				if(Herpicus.isInteger(i)) {
+					if(i >= 0 && i <= Herpicus.Date.Months.length) {
+						return Herpicus.Date.Months[i];
+					}
+				}
+			},
+			Unix: function(UnixTime) {
+				var d = new Date(Herpicus.isInteger(UnixTime) ? UnixTime : Herpicus.UnixTime() * 1000);
+				var Hours = d.getHours(),
+					Minutes = d.getMinutes() < 10 ? '0' + d.getMinutes() : d.getMinutes(),
+					Seconds = d.getSeconds() < 10 ? '0' + d.getSeconds() : d.getSeconds(),
+					Month = Herpicus.Date.Month(d.getMonth());
+
+				return {
+					Raw: d,
+					Format: function(i) {
+						if(Herpicus.isInteger(i)) {
+							if(i == 1) {
+								return Month + " " + d.getDate() + ", " + d.getFullYear() + " - " + Hours + ":" + Minutes;
+							}
+						}
+					}
+				}
+			}
+		};
+
+		return $Date;
+	})();
+
 	Herpicus.Events = new Object();
 	Herpicus.Events.Storage = {};
 	Herpicus.Events.Add = function(e, fn, el, b) {
@@ -905,6 +944,19 @@ if(typeof Herpicus === 'undefined') {
 		}
 	};
 
+	Herpicus.Storage = (function() {
+		var data = {}, b = ('localStorage' in window);
+		return {
+			Set: function(key, value) { return b ? window.localStorage.setItem(key, String(value)) : (data[key] = String(value)); },
+			Get: function(key) { return b ? window.localStorage.getItem(key) : (data.hasOwnProperty(key) ? data[key] : null); },
+			Remove: function(key) { return b ? window.localStorage.removeItem(key) : (delete data[key]); },
+			Clear: function() { return b ? window.localStorage.clear() : (data = {}); }
+		};
+	})();
+
+	Herpicus.Storage.Set('kek', 'topkek')
+	console.log(Herpicus.Storage.Get('kek'));
+
 	Herpicus.Require = function() {
 		var $arguments = arguments;
 		if(!Herpicus.Require.__loaded__) {
@@ -915,6 +967,8 @@ if(typeof Herpicus === 'undefined') {
 			Herpicus.Require.__config__ = {
 				Base: "/",
 				Paths: {},
+				Cache: true,
+				Expires: 2629744, // 1 month
 			}
 		}
 
@@ -928,6 +982,7 @@ if(typeof Herpicus === 'undefined') {
 					var $opts = {
 						Source: null,
 						Async: true,
+						Cache: true,
 						Defer: false,
 						Callback: null
 					};
@@ -943,6 +998,10 @@ if(typeof Herpicus === 'undefined') {
 						$opts = Herpicus.Extend($opts, n);
 					}
 
+					if(!Herpicus.isBoolean($opts.Cache)) {
+						$opts.Cache = true;
+					}
+
 					if(Herpicus.isString($opts.Source)) {
 						if(!/^https?:\/\/|^\/\//i.test($opts.Source)) {
 							$opts.Source = ($opts.Source.substr(0, Herpicus.Require.__config__.Base.length - 1) != Herpicus.Require.__config__.Base ? Herpicus.Require.__config__.Base : "") + (Herpicus.Require.__config__.Base.substr(0, Herpicus.Require.__config__.Base.length-1) !== "/" ? "/" : "") + $opts.Source;
@@ -952,43 +1011,67 @@ if(typeof Herpicus === 'undefined') {
 							}
 						}
 
-						Herpicus.Http.Get($opts.Source, function(Response) {
-							if(Response.Status.Code === 200) {
-								try {
-									var fn = new Function(Response.Data);
-									Herpicus.Require.__loaded__[$opts.Source] = fn;
-									$Scripts[n] = fn.call(this);
+						var __getScript = function() {
+							Herpicus.Http.Get($opts.Source, function(Response) {
+								if(Response.Status.Code === 200) {
+									try {
+										$Scripts[n] = (new Function(Response.Data)).call(this);
+										Herpicus.Storage.Set($opts.Source, Herpicus.JSON.Stringify({
+											Expires: Herpicus.UnixTime() + ($opts.Cache ? Herpicus.Require.__config__.Expires : 0),
+											Script: String($Scripts[n])
+										}));
 
-									if(Herpicus.isFunction($opts.Callback)) {
-										$opts.Callback.call(this);
-									}
-								} catch(e) {
-									$Scripts[n] = undefined;
-									console.log(e);
-								}
-							} else {
-								$Scripts[n] = undefined;
-								console.log($opts.Source + ' not found');
-							}
-
-							$i++;
-
-							if($arguments[0].length === $i && $Callback !== null) {
-								Herpicus.Safe(function() {
-									var $Loaded = [];
-									Herpicus.ForEach($arguments[0], function(_, n) {
-										if(Herpicus.Contains($Scripts, n)) {
-											$Loaded.push($Scripts[n]);
+										if(Herpicus.isFunction($opts.Callback)) {
+											$opts.Callback.call(this);
 										}
-									});
-									console.log($Scripts, $Loaded)
+									} catch(e) {
+										$Scripts[n] = undefined;
+										console.log(e);
+									}
+								} else {
+									$Scripts[n] = undefined;
+									console.log($opts.Source + ' not found');
+								}
 
-									$Callback.apply(this, $Loaded);
-								});
+								$i++;
+							});
+						}
+
+						if(Herpicus.Require.__config__.Cache && $opts.Cache && (g = Herpicus.Storage.Get($opts.Source)) !== null) {
+							var s = Herpicus.JSON.Parse(g);
+							if(s.Expires <= Herpicus.UnixTime()) {
+								__getScript();
+							} else {
+								try {
+									$Scripts[n] = (new Function("return " + s.Script)).call(this);
+								} catch(err) {
+									$Scripts[n] = undefined;
+									console.log(err);
+								}
+								$i++;
 							}
-						});
+						} else {
+							 __getScript();
+						}
 					}
 				});
+
+				var wait = Herpicus.Interval(function() {
+					if($arguments[0].length === $i && $Callback !== null) {
+						wait.Stop();
+
+						Herpicus.Safe(function() {
+							var $Loaded = [];
+							Herpicus.ForEach($arguments[0], function(_, n) {
+								if(Herpicus.Contains($Scripts, n)) {
+									$Loaded.push($Scripts[n]);
+								}
+							});
+
+							$Callback.apply(this, $Loaded);
+						});
+					}
+				}, 50);
 			}
 		}
 
@@ -999,7 +1082,9 @@ if(typeof Herpicus === 'undefined') {
 		if(!Herpicus.Require.__config__) {
 			Herpicus.Require.__config__ = {
 				Base: "/",
-				Path: []
+				Paths: {},
+				Cache: true,
+				Expires: 2629744, // 1 month
 			}
 		};
 
