@@ -13,13 +13,13 @@ return Herpicus.Module('RouteHandler', function() {
 				Handler = arguments[1];
 			}
 
-			if(Route != null && Handler != null) {
+			if(Route !== null && Handler !== null) {
 				$RouteHandler.Routes[Route] = Handler;
 			}
 		}
 
 		return $RouteHandler;
-	}
+	};
 
 	$RouteHandler.Parse = function(loc, arr) {
 		if(!Herpicus.isArray(loc)) {
@@ -48,14 +48,15 @@ return Herpicus.Module('RouteHandler', function() {
 		}
 
 		return r;
-	}
+	};
+
 	$RouteHandler.Location = function(i) {
 		var loc = window.location.hash.split("/");
 		loc[0] = "/";
 
 		if(Herpicus.isInteger(i)) {
 			if(Herpicus.isDefined(loc[i])) {
-				if(i == 0) {
+				if(i === 0) {
 					return "/";
 				}
 				else if(Herpicus.isDefined(loc[i])) {
@@ -68,7 +69,7 @@ return Herpicus.Module('RouteHandler', function() {
 		}
 
 		return $RouteHandler.Parse(loc);
-	}
+	};
 
 	var __eventHandler = function() {
 		var location = $RouteHandler.Location(true);
@@ -83,22 +84,22 @@ return Herpicus.Module('RouteHandler', function() {
 					}
 				});
 
-				if(route.join("/") == location.join("/")) {
+				if(route.join("/") === location.join("/")) {
 					Herpicus.Function(h).Inject(vars).Run();
 				}
 			}
 		});
-	}
+	};
 
 	var wait = Herpicus.Interval(function() {
 		if(Herpicus.Ready) {
-			if(window.location.hash == "" || window.location.hash == "#") {
+			if(window.location.hash === "" || window.location.hash === "#") {
 				window.location.hash = "#!/";
 			}
 			__eventHandler();
 			wait.Stop();
 		}
-	}, 25)
+	}, 25);
 
 	Herpicus.Events.Add('hashchange', function(event) {
 		__eventHandler();
