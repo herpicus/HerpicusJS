@@ -116,15 +116,19 @@ Herpicus.Safe(function() {
 // Script continues
 ```
 
-**Herpicus.Queue**  
+**Herpicus.Queue()**  
 Creates a new queue  
-*Herpicus.Queue.Add(Function)*  
+
+`Herpicus.Queue.Add(Function)`   
 Add a callback function to the queue  
-*Herpicus.Queue.Clear()*  
+
+`Herpicus.Queue.Clear()`   
 Clear the queue  
-*Herpicus.Queue.Queued()*  
+
+`Herpicus.Queue.Queued()`  
 Returns items in the queue  
-*Herpicus.Queue.Run()*  
+
+`Herpicus.Queue.Run()`  
 Runs all functions stored in the queue, then the queue is erased  
 ```
 var queue = new Herpicus.Queue();
