@@ -492,10 +492,6 @@ if(typeof Herpicus === 'undefined') {
 			}
 		})
 	};
-	// App defer
-	// Call this on app defer
-	// kill all timers etc on defer
-	Herpicus.Defer = function() {}
 	//
 	// Safe
 	//
@@ -513,30 +509,36 @@ if(typeof Herpicus === 'undefined') {
 	//
 	// Queue
 	//
-	Herpicus.Queue = function(fn) {
-		Herpicus.Safe(function() {
-			if(!Herpicus.Queue.Storage) {
-				Herpicus.Queue.Storage = [];
-			}
-
-			if(Herpicus.isFunction(fn)) {
-				Herpicus.Queue.Storage.push(Herpicus.Safe(fn, false));
-			}
-		});
-
-		return Herpicus;
-	}
-	Herpicus.Queue.Storage = [];
-	Herpicus.Queue.Run = function() {
-		if(Herpicus.Queue.Storage.length > 0) {
-			Herpicus.ForEach(Herpicus.Queue.Storage, function(index, f) {
-				if(Herpicus.isFunction(f)) {
-					f.call(this);
+	Herpicus.Queue = function() {
+		var queue = [];
+		var $Methods = {
+			Add: function(fn) {
+				if(Herpicus.isFunction(fn)) {
+					queue.push(Herpicus.Safe(fn, false));
 				}
-			});
 
-			Herpicus.Queue.Storage = [];
-		}
+				return $Methods;
+			},
+			Clear: function() {
+				queue = [];
+				return $Methods;
+			},
+			Queued: function() {
+				return queue;
+			},
+			Run: function() {
+				if(queue.length > 0) {
+					Herpicus.ForEach(queue, function(_, fn) {
+						fn.call(this);
+					});
+
+					$Methods.Clear();
+					return $Methods;
+				}
+			}
+		};
+
+		return $Methods;
 	};
 	//
 	// Function Parser
@@ -953,9 +955,6 @@ if(typeof Herpicus === 'undefined') {
 			Clear: function() { return b ? window.localStorage.clear() : (data = {}); }
 		};
 	})();
-
-	Herpicus.Storage.Set('kek', 'topkek')
-	console.log(Herpicus.Storage.Get('kek'));
 
 	Herpicus.Require = function() {
 		var $arguments = arguments;
@@ -1586,9 +1585,9 @@ if(typeof Herpicus === 'undefined') {
 												return $Element;
 											},
 											Toggle: function() {
-												return $Element.Visible ? $Element.Hide() : $Element.Show();
+												return $Element.Visible() ? $Element.Hide() : $Element.Show();
 											},
-											Visible: (function() {
+											Visible: function() {
 												var fn = {
 													d: function(e) {
 														while(e = e.parentNode) {
@@ -1628,7 +1627,7 @@ if(typeof Herpicus === 'undefined') {
 													return false;
 												}
 												return true;
-											})()
+											}
 										});
 
 										return $Element;
@@ -1705,9 +1704,6 @@ if(typeof Herpicus === 'undefined') {
 		if(document.readyState === "complete") {
 			documentReady.Stop();
 			documentReady = undefined;
-
-			Herpicus.Queue.Run();
-
 			Herpicus.$Ready = true;
 		}
 	}, 10);
