@@ -116,18 +116,25 @@ Herpicus.Safe(function() {
 // Script continues
 ```
 
-**Herpicus.Queue(Callback)**  
-Adds function to a queue  
+**Herpicus.Queue**  
+Creates a new queue  
+*Herpicus.Queue.Add(Function)*  
+Add a callback function to the queue  
+*Herpicus.Queue.Clear()*  
+Clear the queue  
+*Herpicus.Queue.Queued()*  
+Returns items in the queue  
 *Herpicus.Queue.Run()*  
 Runs all functions stored in the queue, then the queue is erased  
 ```
-Herpicus.Queue(function() {
+var queue = new Herpicus.Queue();
+queue.Add(function() {
   console.log("Hello World!");
 });
 
-Herpicus.Ready(function() {
-  Herpicus.Queue.Run();
-});
+if(condition) {
+  queue.Run();
+}
 ```
 
 **Herpicus.Function(Function)**  
