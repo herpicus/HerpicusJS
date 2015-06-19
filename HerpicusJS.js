@@ -580,7 +580,7 @@ if(typeof Herpicus === 'undefined') {
 			r.Inject = function(scope) {
 				var s = r.str, i = s.indexOf('{'), vars = "";
 				Herpicus.ForEach(scope, function(key, value) {
-					vars += Herpicus.Sprintf("var %s=Herpicus.JSON.Parse(%s);", key, $JSON.Stringify(value));
+					vars += Herpicus.Sprintf("var %s=Herpicus.JSON.Parse(%s);", key, Herpicus.JSON.Stringify(value));
 				});
 
 				r.str = s.substr(0, i + 1) + vars + s.substr(i+1);
@@ -589,7 +589,14 @@ if(typeof Herpicus === 'undefined') {
 			}
 
 			r.Run = function() {
-				return new Function("return " + r.str)().call(this);
+				try{
+					return (new Function("return " + r.str)()).call(this);
+				} catch(err) {
+					console.log(err);
+					console.log("return " + r.str)
+				}
+
+				return null;
 			}
 		}
 
@@ -647,7 +654,7 @@ if(typeof Herpicus === 'undefined') {
 		};
 
 		var $Methods = {
-			Stringify: window.JSON ? window.JSON.stringify : function(t, e, r) {
+			Stringify: function(t, e, r) {
 				var n;
 				if(gap = "", indent = "", Herpicus.isInteger(r)) {
 					for(n = 0; r > n; n += 1) {
@@ -662,7 +669,7 @@ if(typeof Herpicus === 'undefined') {
 
 				return str("", {"": t});
 			},
-			Parse: window.JSON ? window.JSON.parse : function (text, reviver) {
+			Parse: function(text, reviver) {
 				function walk(t, e) {
 					var r, n, o = t[e];
 					if(o && "object" == typeof o)
@@ -670,8 +677,9 @@ if(typeof Herpicus === 'undefined') {
 					return reviver.call(t, e, o)
 				}
 				var j;
+				text = String(text);
+
 				if(
-					text = String(text),
 					$Regex.Dangerous.lastIndex = 0,
 					$Regex.Dangerous.test(text) &&
 					(text = text.replace($Regex.Dangerous, function (t) {
@@ -685,7 +693,8 @@ if(typeof Herpicus === 'undefined') {
 				) {
 					return j = eval("(" + text + ")"), Herpicus.isFunction(reviver) ? walk({"": j}, "") : j;
 				}
-				throw new SyntaxError("JSON.parse")
+
+				return text;
 			}
 		};
 		return $Methods;
@@ -1014,11 +1023,12 @@ if(typeof Herpicus === 'undefined') {
 							Herpicus.Http.Get($opts.Source, function(Response) {
 								if(Response.Status.Code === 200) {
 									try {
-										$Scripts[n] = (new Function(Response.Data)).call(this);
+										$Scripts[n] = Response.Data;
 										Herpicus.Storage.Set($opts.Source, Herpicus.JSON.Stringify({
 											Expires: Herpicus.UnixTime() + ($opts.Cache ? Herpicus.Require.__config__.Expires : 0),
-											Script: String($Scripts[n])
+											Script: Response.Data
 										}));
+										(new Function(Response.Data)).call(this);
 
 										if(Herpicus.isFunction($opts.Callback)) {
 											$opts.Callback.call(this);
@@ -1036,13 +1046,15 @@ if(typeof Herpicus === 'undefined') {
 							});
 						}
 
+						Herpicus.Require.__config__.Cache = false;
 						if(Herpicus.Require.__config__.Cache && $opts.Cache && (g = Herpicus.Storage.Get($opts.Source)) !== null) {
 							var s = Herpicus.JSON.Parse(g);
 							if(s.Expires <= Herpicus.UnixTime()) {
 								__getScript();
 							} else {
 								try {
-									$Scripts[n] = (new Function("return " + s.Script)).call(this);
+									$Scripts[n] = (new Function(s.Script));
+									$Scripts[n].call(this);
 								} catch(err) {
 									$Scripts[n] = undefined;
 									console.log(err);
@@ -1099,23 +1111,35 @@ if(typeof Herpicus === 'undefined') {
 			Herpicus.Module.Modules = {};
 		}
 
-		var __Module__ = function(callback) {
-			if(Herpicus.isFunction(callback)) {
-				var Args = Herpicus.Function(callback).Arguments;
-				if(Args.Count > 0) {
-					var modules = new Array();
-					Herpicus.ForEach(Args, function(_, Name) {
+		var __Module__ = function(arg) {
+			try {
+				var isFunction = false;
+				if((Arr = Herpicus.isFunction(arg) ?
+					((isFunction = true), Herpicus.Function(arg).Arguments.Names) : (
+					Herpicus.isArray(arg) ? arg : [])
+				), Arr.length > 0) {
+					var modules = [];
+					Herpicus.ForEach(Arr, function(_, Name) {
 						modules.push(
 							Herpicus.Contains(Herpicus.Module.Modules, Name) &&
 							Herpicus.isFunction(Herpicus.Module.Modules[Name]) ?
-							Herpicus.Module.Modules[Name] : undefined
+								Herpicus.Module.Modules[Name] : undefined
 						);
 					});
 
-					callback.apply(this, modules);
+					if(isFunction) {
+						arg.apply(this, modules);
+					}
 					return modules;
 				}
+				else if(Herpicus.isString(arg)) {
+					return Herpicus.Contains(Herpicus.Module.Modules, Name) && Herpicus.isFunction(Herpicus.Module.Modules[Name]) ? Herpicus.Module.Modules[Name] : undefined;
+				}
+			} catch(err) {
+				console.log(err);
 			}
+
+			return undefined;
 		}
 
 		if(arguments.length === 1) {
