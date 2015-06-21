@@ -1,7 +1,9 @@
-return Herpicus.Module('RouteHandler', function() {
-	var $RouteHandler = new Object();
+Herpicus.Module('RouteHandler', function() {
+	var $RouteHandler = {}, Routes = {};
 
-	$RouteHandler.Routes = new Object();
+	$RouteHandler.Routes = function() {
+		return routes;
+	};
 	$RouteHandler.Route = function() {
 		if(arguments.length === 2) {
 			var Route = null, Handler = null;
@@ -14,7 +16,7 @@ return Herpicus.Module('RouteHandler', function() {
 			}
 
 			if(Route !== null && Handler !== null) {
-				$RouteHandler.Routes[Route] = Handler;
+				Routes[Route] = Handler;
 			}
 		}
 
@@ -71,21 +73,37 @@ return Herpicus.Module('RouteHandler', function() {
 		return $RouteHandler.Parse(loc);
 	};
 
-	var __eventHandler = function() {
+	$RouteHandler.onHashChange = function() {
 		var location = $RouteHandler.Location(true);
-		Herpicus.ForEach($RouteHandler.Routes, function(r, h) {
+		Herpicus.ForEach(Routes, function(r, callback) {
 			var route = $RouteHandler.Parse(r, true);
-
 			if(location.length === route.length) {
-				var vars = {};
-				Herpicus.ForEach(route, function(i, v) {
-					if(v.indexOf('{') > -1) {
-						vars[v.substr(1, v.length - 2)] = route[i] = location[i];
+				var params = {},
+					vars = [];
+
+				Herpicus.ForEach(route, function(i, segment) {
+					try {
+						if(
+							(param = segment.match(/[^{}]+(?=\})/g)) !== null &&
+							(pvalues = location[i].match(new RegExp(segment.replace(/[{\w}]+/g, "(\\w)"), "g"))) !== null
+						) {
+							Herpicus.ForEach(param, function(index, p) {
+								var val = typeof pvalues[index] !== "undefined" ? pvalues[index] : undefined;
+								route[i] = route[i].replace(new RegExp("{" + p + "}", "i"), val);
+								params[p] = val;
+								vars.push(val);
+							});
+						}
+					} catch(exception) {
+						console.log(exception);
 					}
 				});
 
 				if(route.join("/") === location.join("/")) {
-					Herpicus.Function(h).Inject(vars).Run();
+					callback.call(this, {
+						Params: params,
+						ParamValues: vars
+					});
 				}
 			}
 		});
@@ -96,13 +114,13 @@ return Herpicus.Module('RouteHandler', function() {
 			if(window.location.hash === "" || window.location.hash === "#") {
 				window.location.hash = "#!/";
 			}
-			__eventHandler();
+			$RouteHandler.onHashChange();
 			wait.Stop();
 		}
 	}, 25);
 
 	Herpicus.Events.Add('hashchange', function(event) {
-		__eventHandler();
+		$RouteHandler.onHashChange();
 	}, window);
 
 	return $RouteHandler;
