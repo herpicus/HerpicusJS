@@ -18,9 +18,9 @@ Herpicus.Require.Config({
 	});
 	
 	// user navigates to /#!/test/your/welcome/bro
-	r.Route('/test/{$Cool}/{$Story}/{$M8}', function() {
-	  // returns your welcome bro
-	  console.log($Cool, $Story, $M8);
+	r.Route('/test/{$Cool}/{$Story}/{$M8}', function(Response) {
+	  // returns your welcome bro, [your, welcome, bro]
+	  console.log(Response.Params.Cool, Response.Params.Story, Response.Params.M8, Response.ParamValues);
 	});
 });
 ```
