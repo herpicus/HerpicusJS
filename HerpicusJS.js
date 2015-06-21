@@ -1,7 +1,7 @@
 if(typeof Herpicus === 'undefined') {
 	var Herpicus = new Object();
 	Herpicus.$AppName = "HerpicusJS";
-	Herpicus.$Version = 3.1;
+	Herpicus.$Version = 0.3;
 	Herpicus.$Ready = false;
 	Herpicus.Ready = function(callback) {
 		var wait = Herpicus.Interval(function() {
@@ -593,7 +593,6 @@ if(typeof Herpicus === 'undefined') {
 					return (new Function("return " + r.str)()).call(this);
 				} catch(err) {
 					console.log(err);
-					console.log("return " + r.str)
 				}
 
 				return null;
@@ -663,6 +662,7 @@ if(typeof Herpicus === 'undefined') {
 				} else {
 					Herpicus.isString(r) && (indent = r);
 				}
+				
 				if(rep = e, e && !Herpicus.isFunction(e) && ("object" != typeof e || "number" != typeof e.length)) {
 					throw new Error("JSON.stringify");
 				}
@@ -670,28 +670,29 @@ if(typeof Herpicus === 'undefined') {
 				return str("", {"": t});
 			},
 			Parse: function(text, reviver) {
-				function walk(t, e) {
-					var r, n, o = t[e];
-					if(o && "object" == typeof o)
-						for(r in o) Object.prototype.hasOwnProperty.call(o, r) && (n = walk(o, r), void 0 !== n ? o[r] = n : delete o[r]);
-					return reviver.call(t, e, o)
-				}
-				var j;
-				text = String(text);
+				if(Herpicus.isString(text) && text !== "") {
+					function walk(t, e) {
+						var r, n, o = t[e];
+						if(o && "object" == typeof o)
+							for(r in o) Object.prototype.hasOwnProperty.call(o, r) && (n = walk(o, r), void 0 !== n ? o[r] = n : delete o[r]);
+						return reviver.call(t, e, o)
+					}
 
-				if(
-					$Regex.Dangerous.lastIndex = 0,
-					$Regex.Dangerous.test(text) &&
-					(text = text.replace($Regex.Dangerous, function (t) {
-						return "\\u" + ("0000" + t.charCodeAt(0).toString(16)).slice(-4)
-					})),
-					/^[\],:{}\s]*$/.test(
-						text.replace(/\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g, "@")
-						.replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, "]")
-						.replace(/(?:^|:|,)(?:\s*\[)+/g, "")
-					)
-				) {
-					return j = eval("(" + text + ")"), Herpicus.isFunction(reviver) ? walk({"": j}, "") : j;
+					var j;
+					if(
+						$Regex.Dangerous.lastIndex = 0,
+						$Regex.Dangerous.test(text) &&
+						(text = text.replace($Regex.Dangerous, function (t) {
+							return "\\u" + ("0000" + t.charCodeAt(0).toString(16)).slice(-4)
+						})),
+						/^[\],:{}\s]*$/.test(
+							text.replace(/\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g, "@")
+							.replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, "]")
+							.replace(/(?:^|:|,)(?:\s*\[)+/g, "")
+						)
+					) {
+						return j = eval("(" + text + ")"), Herpicus.isFunction(reviver) ? walk({"": j}, "") : j;
+					}
 				}
 
 				return text;
