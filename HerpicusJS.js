@@ -80,6 +80,25 @@ if(typeof Herpicus === 'undefined') {
 	}
 	Herpicus.isIterable = function(obj) {};
 	//
+	// ToObject
+	//
+	Herpicus.toObject = function(arg) {
+		if(Herpicus.isObject(arg)) {
+			return arg;
+		}
+		else if(typeof arg === "object") {
+			var rv = {};
+			for(var i = 0; i < arg.length; ++i) {
+				rv[i] = arg[i];
+			}
+			return rv;
+		}
+		else if(Herpicus.isString(arg)) {
+			return [arg];
+		}
+		return {};
+	}
+	//
 	// (Object) Extend
 	//
 	Herpicus.Extend = function(dest) {
@@ -121,27 +140,12 @@ if(typeof Herpicus === 'undefined') {
 	//
 	Herpicus.ForEach = function(obj, callback) {
 		if(Herpicus.isFunction(callback)) {
-			try {
-				var value, i = 0;
-				if(Herpicus.isArray(obj)) {
-					for (; i < obj.length; i++) {
-						value = callback.call(obj[i], i, obj[i]);
-
-						if(value === false) {
-							break;
-						}
-					}
-				} else {
-					for(i in obj) {
-						value = callback.call(obj[i], i, obj[i]);
-						if(value === false) {
-							break;
-						}
-					}
+			Herpicus.Safe(function() {
+				obj = Herpicus.toObject(obj);
+				for(var i in obj) {
+					callback.call(obj, i, obj[i]);
 				}
-			} catch(e) {
-				Herpicus.ErrorHandler(e);
-			}
+			});
 		}
 
 		return obj;
@@ -182,43 +186,40 @@ if(typeof Herpicus === 'undefined') {
 	// (Object) Keys
 	//
 	Herpicus.Keys = function(obj) {
-		var hasEnumBug = !{toString: null}.propertyIsEnumerable('toString');
-		var nonEnumerableProps = ['valueOf', 'isPrototypeOf', 'toString', 'propertyIsEnumerable', 'hasOwnProperty', 'toLocaleString'];
+		'use strict';
+		var hasOwnProperty = Object.prototype.hasOwnProperty,
+			hasDontEnumBug = !({ toString: null }).propertyIsEnumerable('toString'),
+			dontEnums = [
+				'toString',
+				'toLocaleString',
+				'valueOf',
+				'hasOwnProperty',
+				'isPrototypeOf',
+				'propertyIsEnumerable',
+				'constructor'
+			],
+			dontEnumsLength = dontEnums.length;
 
-		var collectNonEnumProps = function(obj, keys) {
-			var nonEnumIdx = nonEnumerableProps.length;
-			var constructor = obj.constructor;
-			var proto = (Herpicus.isFunction(constructor) && constructor.prototype) || ObjProto;
+		if(typeof obj !== 'object' && (typeof obj !== 'function' || obj === null)) {
+			throw new TypeError('Object.keys called on non-object');
+		}
 
-			var prop = 'constructor';
-			if(Herpicus.Has(obj, prop) && !Herpicus.Contains(keys, prop)) {
-				keys.push(prop);
+		var result = [], prop, i;
+
+		for(prop in obj) {
+			if(hasOwnProperty.call(obj, prop)) {
+				result.push(prop);
 			}
+		}
 
-			while (nonEnumIdx--) {
-				prop = nonEnumerableProps[nonEnumIdx];
-				if(prop in obj && obj[prop] !== proto[prop] && !Herpicus.Contains(keys, prop)) {
-					keys.push(prop);
+		if(hasDontEnumBug) {
+			for(i = 0; i < dontEnumsLength; i++) {
+				if (hasOwnProperty.call(obj, dontEnums[i])) {
+					result.push(dontEnums[i]);
 				}
 			}
-		};
-
-		var Keys = [];
-		if(!Herpicus.isObject(obj)) {
-			return Keys;
 		}
-
-		for(var key in obj) {
-			if(Herpicus.Has(obj, key)) {
-				keys.push(key);
-			}
-		}
-
-		if(hasEnumBug) {
-			collectNonEnumProps(obj, Keys);
-		}
-
-		return Keys;
+		return result;
 	}
 	//
 	// (Object) Values
@@ -540,6 +541,143 @@ if(typeof Herpicus === 'undefined') {
 
 		return $Methods;
 	};
+	Herpicus.String = function(str) {
+		if(!Herpicus.isString(str)) {
+			return null;
+		}
+
+		var $self = {};
+		$self.Add = function(nstr, index) {
+			index = Herpicus.isUndefined(index) ? str.length :
+					Herpicus.isInteger(index) ? index : str.length;
+			return str.slice(0, index) + str + str.slice(index);
+		};
+
+		$self.Capitalize = function(nstr) {
+			return nstr.toUpperCase();
+		};
+
+		$self.Chars = function(search) {
+			return str.match(/[\s\S]/g);
+		};
+
+		$self.CharCodes = function() {
+			var codes = [];
+			for(var i = 0, i < str.length; i++) {
+				codes.push(str.charCodeAt(i));
+			}
+			return codes;
+		};
+
+		$self.Trim = function() {
+			return Herpicus.Trim(str);
+		};
+
+		var base64reg = /[^A-Za-z0-9\+\/\=]/g;
+		$self.EncodeAscii = function(str) {
+			var output = '';
+			var chr1, chr2, chr3;
+			var enc1, enc2, enc3, enc4;
+			var i = 0;
+			do {
+				chr1 = str.charCodeAt(i++);
+				chr2 = str.charCodeAt(i++);
+				chr3 = str.charCodeAt(i++);
+				enc1 = chr1 >> 2;
+				enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
+				enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
+				enc4 = chr3 & 63;
+				if(isNaN(chr2)) {
+					enc3 = enc4 = 64;
+				} else if(isNaN(chr3)) {
+					enc4 = 64;
+				}
+				output = output + key.charAt(enc1) + key.charAt(enc2) + key.charAt(enc3) + key.charAt(enc4);
+				chr1 = chr2 = chr3 = '';
+				enc1 = enc2 = enc3 = enc4 = '';
+			} while (i < str.length);
+			return output;
+		};
+
+		$self.DecodeAscii = function(input) {
+			var output = '';
+			var chr1, chr2, chr3;
+			var enc1, enc2, enc3, enc4;
+			var i = 0;
+			if(input.match(base64reg)) {
+				return '';
+			}
+			input = input.replace(/[^A-Za-z0-9\+\/\=]/g, '');
+			do {
+				enc1 = key.indexOf(input.charAt(i++));
+				enc2 = key.indexOf(input.charAt(i++));
+				enc3 = key.indexOf(input.charAt(i++));
+				enc4 = key.indexOf(input.charAt(i++));
+				chr1 = (enc1 << 2) | (enc2 >> 4);
+				chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
+				chr3 = ((enc3 & 3) << 6) | enc4;
+				output = output + chr(chr1);
+				if(enc3 != 64) {
+					output = output + chr(chr2);
+				}
+				if(enc4 != 64) {
+					output = output + chr(chr3);
+				}
+				chr1 = chr2 = chr3 = '';
+				enc1 = enc2 = enc3 = enc4 = '';
+			} while (i < input.length);
+			return output;
+		}
+		$self.Base64Decode = function() {
+			return decodeURIComponent(escape($self.DecodeAscii(str)));
+		};
+		$self.Base64Encode = function() {
+			return $self.EncodeAscii(unescape(encodeURIComponent(str)));
+		};
+		$self.Find = function() {};
+		$self.Remove = function() {};
+		$self.isEmpty = function() {};
+		$self.Title = function() {};
+		$self.Words = function() {};
+
+		return $self;
+	};
+	Herpicus.Object = function(obj) {
+		var $self = {};
+		return $self;
+	};
+	Herpicus.Array = function(arr) {
+		var $self = {};
+		$self.Add = function(item, index) {};
+		$self.Remove = function(index, end) {};
+		$self.All = function() {};
+		$self.At = function(index) {};
+		$self.Clone = function() {};
+		$self.Compact = function() {};
+		$self.Count = function() {};
+		$self.ForEach = function() {};
+		$self.Find = function() {};
+		$self.isEmpty = function() {};
+		$self.Randomize = function() {};
+
+		return $self;
+	};
+	Herpicus.Integer = function(int) {
+		var $self = {};
+		$self.Random = function(n1, n2) {};
+		$self.Range = function(start, end) {};
+		$self.Abbreviate = function() {};
+		$self.Bytes = function() {};
+		$self.Maximum = function(max) {};
+		$self.Ceil = function() {};
+		$self.Char = function() {};
+		$self.Floor = function() {};
+		$self.Hex = function() {};
+		$self.isEven = function() {};
+		$self.isOdd = function() {};
+		$self.Round = function() {};
+		return $self;
+	};
 	//
 	// Function Parser
 	//
@@ -662,7 +800,7 @@ if(typeof Herpicus === 'undefined') {
 				} else {
 					Herpicus.isString(r) && (indent = r);
 				}
-				
+
 				if(rep = e, e && !Herpicus.isFunction(e) && ("object" != typeof e || "number" != typeof e.length)) {
 					throw new Error("JSON.stringify");
 				}
