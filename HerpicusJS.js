@@ -245,19 +245,6 @@ if(typeof Herpicus === 'undefined') {
 		return arr;
 	}
 	//
-	// (String) Trim
-	//
-	Herpicus.Trim = function(str) {
-		if(Herpicus.isString(str)) {
-			if(String.prototype.trim) {
-				return str.trim();
-			}
-			return str.replace(/^\s+|\s+$/g, "");
-		}
-
-		return str;
-	}
-	//
 	// (String, Array) IndexOf
 	//
 	Herpicus.IndexOf = function(arr, searchElement, fromIndex) {
@@ -563,14 +550,17 @@ if(typeof Herpicus === 'undefined') {
 
 		$self.CharCodes = function() {
 			var codes = [];
-			for(var i = 0, i < str.length; i++) {
+			for(var i = 0; i < str.length; i++) {
 				codes.push(str.charCodeAt(i));
 			}
 			return codes;
 		};
 
 		$self.Trim = function() {
-			return Herpicus.Trim(str);
+			if(String.prototype.trim) {
+				return str.trim();
+			}
+			return str.replace(/^\s+|\s+$/g, "");
 		};
 
 		var base64reg = /[^A-Za-z0-9\+\/\=]/g;
