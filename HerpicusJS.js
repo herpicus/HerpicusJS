@@ -51,6 +51,12 @@ if(typeof Herpicus === 'undefined') {
 		}
 		return false;
 	};
+	Herpicus.isFloat = function(a) {
+		if(Herpicus.TypeOf(a) == 'float') {
+			return true;
+		}
+		return false;
+	}
 	Herpicus.isBoolean = function(a) {
 		if(Herpicus.TypeOf(a) == 'boolean') {
 			return true;
@@ -1656,13 +1662,17 @@ if(typeof Herpicus === 'undefined') {
 
 												return $Element;
 											},
+											Change: function(callback) {
+												Herpicus.Events.Add('change', callback, element);
+												return $Element;
+											},
 											MouseOver: function(callback) {},
 											MouseEnter: function(callback) {
-												Herpicus.Event.Add('mouseenter', callback, element);
+												Herpicus.Events.Add('mouseenter', callback, element);
 												return $Element;
 											},
 											MouseLeave: function(callback) {
-												Herpicus.Event.Add('mouseleave', callback, element);
+												Herpicus.Events.Add('mouseleave', callback, element);
 												return $Element;
 											},
 											Hover: function() {
@@ -1678,7 +1688,7 @@ if(typeof Herpicus === 'undefined') {
 												return $Element;
 											},
 											Click: function(fn) {
-												Herpicus.Event.Add('mousedown', fn, element);
+												Herpicus.Events.Add('mousedown', fn, element);
 												return $Element;
 											},
 											FadeIn: function(time, callback) {
@@ -1714,16 +1724,45 @@ if(typeof Herpicus === 'undefined') {
 												}, Herpicus.isInteger(time) ? time : 10);
 												return $Element;
 											},
-											KeyPress: function(keyCode, fn, preventDefault) {
-												Herpicus.Event.Add('keydown', function(e) {
-													if(e.keyCode == keyCode) {
-														if(Herpicus.isBoolean(preventDefault) && preventDefault) {
-															e.preventDefault();
+											Key: {
+												Code: function(keyCode, fn, preventDefault) {
+													Herpicus.Events.Add('keydown', function(e) {
+														if(e.keyCode == keyCode) {
+															if(Herpicus.isBoolean(preventDefault) && preventDefault) {
+																e.preventDefault();
+															}
+															fn.call(this);
 														}
-														fn.call(this);
-													}
-												}, element);
-												return $Element;
+													}, element);
+													return $Element;
+												},
+												Press: function(callback) {
+													Herpicus.Events.Add('keypress', function(e) {
+														if((new RegExp("^[a-zA-Z0-9]+$")).test(String.fromCharCode(!e.charCode ? e.which : e.charCode))) {
+															callback.call(this);
+														};
+													}, element);
+
+													return $Element;
+												},
+												Down: function(callback) {
+													Herpicus.Events.Add('keydown', function(e) {
+														if((new RegExp("^[a-zA-Z0-9]+$")).test(String.fromCharCode(!e.charCode ? e.which : e.charCode))) {
+															callback.call(this);
+														};
+													}, element);
+
+													return $Element;
+												},
+												Up: function(callback) {
+													Herpicus.Events.Add('keyup', function(e) {
+														if((new RegExp("^[a-zA-Z0-9]+$")).test(String.fromCharCode(!e.charCode ? e.which : e.charCode))) {
+															callback.call(this);
+														};
+													}, element);
+
+													return $Element;
+												}
 											},
 											Focus: function() {
 												element.focus();
