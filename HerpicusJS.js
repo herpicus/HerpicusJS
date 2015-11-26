@@ -805,7 +805,7 @@ if(typeof Herpicus === 'undefined') {
 			},
 			Parse: function(text, reviver) {
 				if(Herpicus.isString(text) && text !== "") {
-					function walk(t, e) {
+					var walk = function(t, e) {
 						var r, n, o = t[e];
 						if(o && "object" == typeof o)
 							for(r in o) Object.prototype.hasOwnProperty.call(o, r) && (n = walk(o, r), void 0 !== n ? o[r] = n : delete o[r]);
@@ -1021,7 +1021,7 @@ if(typeof Herpicus === 'undefined') {
 		return Math.floor(Herpicus.Time() / 1000);
 	}
 	Herpicus.Date = (function() {
-		$Date = {
+		var $Date = {
 			Months: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
 			Month: function(i) {
 				if(Herpicus.isInteger(i)) {
@@ -1181,7 +1181,6 @@ if(typeof Herpicus === 'undefined') {
 							});
 						}
 
-						Herpicus.Require.__config__.Cache = false;
 						if(Herpicus.Require.__config__.Cache && $opts.Cache && (g = Herpicus.Storage.Get($opts.Source)) !== null) {
 							var s = Herpicus.JSON.Parse(g);
 							if(s.Expires <= Herpicus.UnixTime()) {
@@ -1248,7 +1247,7 @@ if(typeof Herpicus === 'undefined') {
 
 		var __Module__ = function(arg) {
 			try {
-				var isFunction = false;
+				var isFunction = false, Arr;
 				if((Arr = Herpicus.isFunction(arg) ?
 					((isFunction = true), Herpicus.Function(arg).Arguments.Names) : (
 					Herpicus.isArray(arg) ? arg : [])
@@ -1268,7 +1267,7 @@ if(typeof Herpicus === 'undefined') {
 					return modules;
 				}
 				else if(Herpicus.isString(arg)) {
-					return Herpicus.Contains(Herpicus.Module.Modules, Name) && Herpicus.isFunction(Herpicus.Module.Modules[Name]) ? Herpicus.Module.Modules[Name] : undefined;
+					return Herpicus.Contains(Herpicus.Module.Modules, arg) && Herpicus.isFunction(Herpicus.Module.Modules[arg]) ? Herpicus.Module.Modules[arg] : undefined;
 				}
 			} catch(err) {
 				console.log(err);
@@ -1318,8 +1317,8 @@ if(typeof Herpicus === 'undefined') {
 					else {
 						element = document.createElement(type);
 						if(type === 'input') {
-							element.type = 'text';
-							element.value = '';
+							element.setAttribute('type', 'text');
+							element.setAttribute('value', '');
 						}
 						else if(type === 'link' || type === 'style') {
 							element.type = 'text/css';
@@ -1435,7 +1434,7 @@ if(typeof Herpicus === 'undefined') {
 													return $Element;
 												},
 												Remove: function(e) {
-													var arr = $Methods.Parse(element).List;
+													var arr = $Element.Class.List;
 													if(arr.indexOf(e) > 0) {
 														var r = new Array();
 														for(var c in arr) {
@@ -1550,6 +1549,12 @@ if(typeof Herpicus === 'undefined') {
 
 												return $Element;
 											},
+											Child: function(i) {
+												if(Herpicus.isInteger(i) && Herpicus.isDefined(element.children[i])) {
+													return $Methods.Parse(element.children[i]);
+												}
+												return null;
+											},
 											Children: function(b) {
 												var children = [];
 												Herpicus.ForEach(element.children, function(_, child) {
@@ -1588,7 +1593,87 @@ if(typeof Herpicus === 'undefined') {
 												return element;
 											},
 											// todo
-											Style: function(style) {},
+											Style: {
+												Padding: function(i) {
+													if(i === undefined) {
+														return element.style.padding;
+													} else {
+														element.style.padding = Herpicus.isInteger(i) ? i : 0;
+														return $Element;
+													}
+												},
+												Index: function(i) {
+													if(i === undefined) {
+														return element.style.zIndex;
+													} else {
+														element.style.zIndex = Herpicus.isInteger(i) ? i : 0;
+														return $Element;
+													} 
+												},
+												Width: function(w) {
+													if(w !== undefined) {
+														element.style.width = Herpicus.isInteger(w) ? w : 0;
+														return $Element;
+													} else {
+														return element.style.width;
+													}
+												},
+												Height: function(w) {
+													if(w !== undefined) {
+														element.style.height = Herpicus.isInteger(w) ? w : 0;
+														return $Element;
+													} else {
+														return element.style.height;
+													}
+												},
+												Position: function(n) {
+													if(n === undefined) {
+														return element.style.position;
+													}
+													else {
+														n = n.toLowerCase();
+														element.style.position = (
+															n === 'relative' ? n : (
+															n === 'absolute' ? n : (
+															n === 'fixed' ? n : null
+														)));
+
+														return $Element;
+													}
+												},
+												Left: function(pos) {
+													if(pos === undefined) {
+														return element.style.left;
+													} else {
+														element.style.left = Herpicus.isInteger(pos) ? pos : 0;
+														return $Element;
+													}
+												},
+												Right: function(pos) {
+													if(pos === undefined) {
+														return element.style.right;
+													} else {
+														element.style.right = Herpicus.isInteger(pos) ? pos : 0;
+														return $Element;
+													}
+												},
+												Bottom: function(pos) {
+													if(pos === undefined) {
+														return element.style.bottom;
+													} else {
+														element.style.bottom = Herpicus.isInteger(pos) ? pos : 0;
+														return $Element;
+													}
+												},
+												Top: function(pos) {
+													if(pos === undefined) {
+														return element.style.top;
+													} else {
+														element.style.top = Herpicus.isInteger(pos) ? pos : 0;
+														return $Element;
+													}
+												}
+											},
 											CSS: function(css) {
 												// todo
 												if(Herpicus.isObject(css)) {}
@@ -1662,6 +1747,14 @@ if(typeof Herpicus === 'undefined') {
 
 												return $Element;
 											},
+											Prepend: function(e) {
+												var $e = $Methods.Parse(e);
+												if($e !== null) {
+													element.insertBefore($e.$Node, element.firstChild);
+												}
+
+												return $Element;
+											},
 											Change: function(callback) {
 												Herpicus.Events.Add('change', callback, element);
 												return $Element;
@@ -1673,6 +1766,10 @@ if(typeof Herpicus === 'undefined') {
 											},
 											MouseLeave: function(callback) {
 												Herpicus.Events.Add('mouseleave', callback, element);
+												return $Element;
+											},
+											MouseMove: function(callback) {
+												Herpicus.Events.Add('mousemove', callback, element);
 												return $Element;
 											},
 											Hover: function() {
@@ -1687,8 +1784,8 @@ if(typeof Herpicus === 'undefined') {
 
 												return $Element;
 											},
-											Click: function(fn) {
-												Herpicus.Events.Add('mousedown', fn, element);
+											Click: function(callback) {
+												Herpicus.Events.Add('mousedown', callback, element);
 												return $Element;
 											},
 											FadeIn: function(time, callback) {
@@ -1764,8 +1861,11 @@ if(typeof Herpicus === 'undefined') {
 													return $Element;
 												}
 											},
-											Focus: function() {
+											Focus: function(select) {
 												element.focus();
+												if(Herpicus.isBoolean(select) && select) {
+													element.select();
+												}
 												return $Element;
 											},
 											Show: function() {
