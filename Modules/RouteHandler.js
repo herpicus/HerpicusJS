@@ -1,8 +1,8 @@
-Herpicus.Module('RouteHandler', function() {
-	var $RouteHandler = {}, Routes = {}, NotFound = null;
+Herpicus.Module('Herpicus.RouteHandler', function() {
+	var $RouteHandler = {}, Routes = {}, NotFound = null, onLocationChange = null;
 
 	$RouteHandler.Routes = function() {
-		return routes;
+		return Routes;
 	};
 	$RouteHandler.Route = function() {
 		if(arguments.length === 2) {
@@ -73,11 +73,49 @@ Herpicus.Module('RouteHandler', function() {
 		return $RouteHandler.Parse(loc);
 	};
 
-	$RouteHandler.Location.Set = function(str) {
-		if(Herpicus.isString(str)) {
-			window.location.hash = "#!/" + str;
+	$RouteHandler.Location.Set = function(n) {
+		var h = "#!/";
+		if(Herpicus.isString(n)) {
+			h += n;
 		}
+		else if(Herpicus.isInteger(n)) {
+			if((w = $RouteHandler.Location(true)), Herpicus.isDefined(w[n])) {
+				var tmp = [];
+				for(var i = 0; i < (n + 1); i++) {
+					tmp[i] = w[i];
+				}
+
+				var t = tmp.join("/");
+				if(t.substring(0, 1) == "/") 
+					t = t.substring(1);
+				h += t; 
+			}
+		}
+
+		window.location.hash = h;
 	};
+
+	$RouteHandler.Location.Back = function(n) {
+		var a = $RouteHandler.Location(true);
+		a.shift();
+		a.pop();
+		
+		if(Herpicus.isInteger(n) && n < a.length) {
+			for(var i = 0; i < n; i++) {
+				a.pop();
+			}
+		}
+		
+		$RouteHandler.Location.Set(a.join("/"));
+	}
+
+	$RouteHandler.Location.Change = function(callback) {
+		if(Herpicus.isFunction(callback)) {
+			onLocationChange = callback;
+		}
+
+		return $RouteHandler;
+	}
 
 	$RouteHandler.NotFound = function(callback) {
 		if(Herpicus.isFunction(callback)) {
@@ -88,35 +126,46 @@ Herpicus.Module('RouteHandler', function() {
 	}
 
 	$RouteHandler.onHashChange = function() {
-		var location = $RouteHandler.Location(true), found = false;
-		Herpicus.ForEach(Routes, function(r, callback) {
-			var route = $RouteHandler.Parse(r, true);
-			if(location.length === route.length) {
-				var params = {};
+		if(window.location.hash === "" || window.location.hash === "#") {
+			window.location.hash = "#!/";
+		}
 
-				Herpicus.ForEach(route, function(i, segment) {
-					if(segment.match(/[^{}]+(?=\})/g) !== null) {
-						var p = segment.replace(/[{}]+/g, "");
-						route[i] = params[p] = location[i];
+		var doRoute = function() {
+			var location = $RouteHandler.Location(true), found = false;
+			Herpicus.ForEach(Routes, function(r, callback) {
+				var route = $RouteHandler.Parse(r, true);
+				if(location.length === route.length) {
+					var params = {};
+
+					Herpicus.ForEach(route, function(i, segment) {
+						if(segment.match(/[^{}]+(?=\})/g) !== null) {
+							route[i] = params[segment.replace(/[{}]+/g, "")] = location[i];
+						}
+					});
+
+					if(route.join("/") === location.join("/")) {
+						found = true;
+						Herpicus.Safe(function() {
+							callback.call(this, params);
+						});
 					}
-				});
-
-				if(route.join("/") === location.join("/")) {
-					found = true;
-					callback.call(this, params);
 				}
-			}
-		});
+			});
 
-		if(!found && NotFound !== null) {
-			NotFound.call(this);
+			if(!found && Herpicus.isFunction(NotFound)) {
+				NotFound.call(this);
+			}
+		}
+
+		if(Herpicus.isFunction(onLocationChange)) {
+			onLocationChange.call(this);
+			doRoute();
+		} else {
+			doRoute();
 		}
 	};
 
 	Herpicus.Ready(function() {
-		if(window.location.hash === "" || window.location.hash === "#") {
-			window.location.hash = "#!/";
-		}
 		$RouteHandler.onHashChange();
 	});
 
